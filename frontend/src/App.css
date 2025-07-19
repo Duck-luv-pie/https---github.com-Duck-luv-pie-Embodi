@@ -29,6 +29,37 @@ body {
   overflow: hidden;
 }
 
+/* Canvas Area */
+.canvas-area {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: crosshair;
+}
+
+.canvas-area:not(.drawing) {
+  cursor: default;
+}
+
+/* Text Box Styles */
+.text-box {
+  position: absolute;
+  background: white;
+  border: 1px solid #CCC;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease;
+}
+
+.text-box.selected {
+  border-color: #007AFF;
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+.text-box:hover {
+  border-color: #007AFF;
+}
+
 /* Top Toolbar */
 .top-toolbar {
   position: fixed;
@@ -94,6 +125,10 @@ body {
   opacity: 0.9;
 }
 
+.mode-grey {
+  background: #666666;
+}
+
 .mode-3d {
   background: #8E44AD;
 }
@@ -138,6 +173,8 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 16px;
+  user-select: none;
+  pointer-events: none;
 }
 
 .palette-icon {
@@ -151,6 +188,8 @@ body {
   font-weight: 500;
   color: #444;
   margin: 0;
+  user-select: none;
+  pointer-events: none;
 }
 
 .logo-subtitle {
@@ -159,6 +198,8 @@ body {
   font-weight: 400;
   color: #888;
   margin: 0;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* Bottom Tool Panel */
@@ -254,9 +295,7 @@ body {
   width: 36px;
   height: 36px;
   border: none;
-  border-radius: 50%;
-  background: #DDD;
-  color: #999;
+  border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -264,13 +303,33 @@ body {
   transition: all 0.2s ease;
 }
 
-.send-button:hover, .voice-button:hover {
+.send-button {
+  background: #DDD;
+}
+
+.voice-button {
+  background: white;
+  border: 1px solid #DDD;
+}
+
+.send-button:hover {
   background: #CCC;
+}
+
+.voice-button:hover {
+  background: #F5F5F5;
+}
+
+.voice-button-active {
+  background: #FF4444 !important;
+}
+
+.voice-button-active:hover {
+  background: #FF6666 !important;
 }
 
 .send-button-active {
   background: #000 !important;
-  color: white !important;
 }
 
 .send-button-active:hover {
