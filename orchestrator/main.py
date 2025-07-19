@@ -7,6 +7,7 @@ import google.generativeai as genai  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv()
+import base64
 import requests
 
 # --- Configure Gemini ---
@@ -16,6 +17,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 COLAB_API_URL = "https://4896656563fd.ngrok-free.app/generate"
+COLAB_API_URL_2 = "https://c93a85c63d08.ngrok-free.app/generated"  # Fresh ngrok URL
 
 
 # --- FastAPI App ---
@@ -34,6 +36,7 @@ app.add_middleware(
 class JobRequest(BaseModel):
     prompt: str = ""
     image_url: str = ""
+    image: str = ""  # Add this for base64 image data
 
 class EnhancePromptResponse(BaseModel):
     enhanced_prompt: str
@@ -56,7 +59,48 @@ async def generate_image(req: JobRequest):
 
 @app.post("/convert-mesh")
 async def convert_mesh(req: JobRequest):
-    return {"status": "ok", "step": "convert-mesh", "received_image": req.image_url}
+    try:
+        print(f"Received convert-mesh request with image length: {len(req.image) if req.image else 0}")
+        
+        # Get base64 image from request
+        if not req.image:
+            print("No image data provided")
+            raise HTTPException(status_code=400, detail="No image data provided")
+
+        print(f"Sending request to Colab URL: {COLAB_API_URL_2}")
+        
+        # Send image to Colab's convert-mesh endpoint
+        colab_response = requests.post(
+            COLAB_API_URL_2, 
+            json={"image": req.image},
+            timeout=30     # Add timeout
+        )
+        print(f"Colab response status: {colab_response.status_code}")
+        print(f"Colab response text: {colab_response.text[:200]}...")  # First 200 chars
+        
+        if colab_response.status_code != 200:
+            print(f"Colab error: {colab_response.text}")
+            raise HTTPException(status_code=500, detail=f"Colab error: {colab_response.text}")
+
+        print(f"Successfully got .obj file, size: {len(colab_response.content)} bytes")
+        
+        # Return the raw .obj file directly
+        from fastapi.responses import Response
+        return Response(
+            content=colab_response.content,
+            media_type="text/plain",
+            headers={"Content-Disposition": "attachment; filename=character.obj"}
+        )
+
+    except requests.exceptions.SSLError as e:
+        print(f"SSL Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"SSL connection failed: {str(e)}")
+    except requests.exceptions.ConnectionError as e:
+        print(f"Connection Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Connection failed - ngrok URL may be expired: {str(e)}")
+    except Exception as e:
+        print(f"Exception in convert_mesh: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"convert_mesh failed: {str(e)}")
 
 @app.post("/auto-rig")
 async def auto_rig(req: JobRequest):
@@ -67,11 +111,16 @@ async def enhance_prompt(req: JobRequest):
     user_desc = req.prompt.strip()
 
     system_prompt = (
-        "You are an expert at writing prompts for Stable Diffusion to generate 3D character models. "
-        "Given a user description, rewrite it as an ideal prompt for Stable Diffusion to generate a T-posing character model. "
-        "Preserve the original character description, but add context to ensure the output is: "
-        "T-posing, full body, front-facing, clear, highly detailed, with visible clothing and body type, on a plain background. "
-        "Output only the enhanced prompt, no commentary or quotes."
+        "You are an expert in crafting prompts for Stable Diffusion to generate 3D T-posing characters for animation or modeling. "
+        "Your goal is to convert the user’s character description into a detailed and explicit prompt that ensures:\n"
+        "- Full body is visible\n"
+        "- Arms are stretched horizontally in a T-pose\n"
+        "- Front-facing view\n"
+        "- Neutral background (white or gray, no scenery)\n"
+        "- Stylized like a game-ready 3D character\n"
+        "- Clear lighting and visible full clothing and body structure\n"
+        "- No close-ups, no half-body crops, no dramatic angles\n\n"
+        "DO NOT add any commentary. Just output the final enhanced prompt only."
     )
 
     prompt = f"{system_prompt}\n\nUser description:\n{user_desc}\n\nEnhanced prompt:"

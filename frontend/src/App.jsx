@@ -443,6 +443,96 @@ function App() {
     }
   };
 
+  // Add this function to send a base64 image to the backend and download the .obj file
+  async function sendImageToTripoSR(file) {
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Image = reader.result.split(',')[1];
+
+      const res = await fetch("http://localhost:8000/convert-mesh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_url: '', prompt: '', image: base64Image }),
+      });
+
+      // Expecting mesh_base64 in response
+      const data = await res.json();
+      if (data.mesh_base64) {
+        // Convert base64 to blob
+        const byteCharacters = atob(data.mesh_base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        // Auto download
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "character.obj";
+        a.click();
+      } else {
+        alert("No mesh_base64 returned from backend");
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Example usage for file input:
+  // <input type="file" accept="image/*" onChange={e => sendImageToTripoSR(e.target.files[0])} />
+
+  // Example usage for canvas:
+  // const canvas = document.querySelector("canvas");
+  // canvas.toBlob(sendImageToTripoSR, "image/png");
+
+  // Handler for converting image to mesh (3D)
+  const handleConvertMesh = async () => {
+    const selectedBox = textBoxes.find(box => selectedTextBoxes.includes(box.id));
+    if (!selectedBox || !selectedBox.image) {
+      console.log("🚫 No image in selected text box");
+      return;
+    }
+
+    // Extract base64 from data URL
+    const base64Image = selectedBox.image.split(',')[1];
+
+    try {
+      const response = await fetch("http://localhost:8000/convert-mesh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_url: "", prompt: "", image: base64Image }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the .obj file content as text
+      const objContent = await response.text();
+
+      // Replace the image with the .obj file content in the text box
+      setTextBoxes(prev =>
+        prev.map(box =>
+          box.id === selectedBox.id
+            ? { 
+                ...box, 
+                image: null, // Remove the image
+                text: objContent, // Set the .obj content as text
+                isEditing: false 
+              }
+            : box
+        )
+      );
+
+      console.log("✅ Mesh converted and displayed as text");
+
+    } catch (err) {
+      console.error("Mesh conversion failed:", err);
+      alert("Failed to convert mesh: " + err.message);
+    }
+  };
+
   return (
     <div className="canvas-container">
       {/* Top Toolbar */}
@@ -477,7 +567,7 @@ function App() {
             </svg>
             Image
           </button>
-          <button className="mode-button mode-3d">
+          <button className="mode-button mode-3d" onClick={handleConvertMesh}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <polyline points="3.27,6.96 12,12.01 20.73,6.96" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
