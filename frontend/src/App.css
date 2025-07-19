@@ -1,0 +1,283 @@
+/* Import Inter font for modern geometric sans-serif */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+#root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Canvas Container */
+.canvas-container {
+  width: 100vw;
+  height: 100vh;
+  background: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top Toolbar */
+.top-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: white;
+  border-bottom: 1px solid #E0E0E0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1000;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toolbar-icon {
+  width: 24px;
+  height: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease;
+  color: #000;
+}
+
+.toolbar-icon:hover {
+  opacity: 0.7;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mode-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: white;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.mode-button:hover {
+  opacity: 0.9;
+}
+
+.mode-3d {
+  background: #8E44AD;
+}
+
+.mode-vr {
+  background: #2980B9;
+}
+
+/* Left Floating Button */
+.floating-button {
+  position: fixed;
+  top: 76px;
+  left: 20px;
+  width: 100px;
+  height: 32px;
+  background: #F2F2F2;
+  border: none;
+  border-radius: 16px;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  z-index: 100;
+}
+
+.floating-button:hover {
+  background: #E8E8E8;
+}
+
+/* Central Logo Section */
+.logo-section {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.palette-icon {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transform: rotate(15deg);
+}
+
+.logo-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  color: #444;
+  margin: 0;
+}
+
+.logo-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  color: #888;
+  margin: 0;
+}
+
+/* Bottom Tool Panel */
+.tool-panel {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 700px;
+  height: 56px;
+  background: white;
+  border: 1px solid #CCC;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1000;
+}
+
+.tool-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-divider {
+  width: 1px;
+  height: 32px;
+  background: #DDD;
+  margin: 0 16px;
+}
+
+.tool-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tool-button:hover {
+  background: #F5F5F5;
+}
+
+.tool-button.tool-selected {
+  background: #000;
+  color: white;
+}
+
+.tool-button.tool-selected:hover {
+  background: #333;
+}
+
+/* Text Input Section */
+.text-input-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.text-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #DDD;
+  border-radius: 18px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.text-input:focus {
+  border-color: #333;
+}
+
+.text-input::placeholder {
+  color: #999;
+}
+
+.send-button, .voice-button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: #DDD;
+  color: #999;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.send-button:hover, .voice-button:hover {
+  background: #CCC;
+}
+
+.send-button-active {
+  background: #000 !important;
+  color: white !important;
+}
+
+.send-button-active:hover {
+  background: #333 !important;
+}
+
+.send-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
