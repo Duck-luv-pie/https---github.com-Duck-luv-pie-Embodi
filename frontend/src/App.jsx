@@ -382,6 +382,31 @@ function App() {
     return { x, y }
   }
 
+  const handleEnhancePrompt = async () => {
+    const selectedBox = textBoxes.find(box => selectedTextBoxes.includes(box.id));
+    if (!selectedBox || !selectedBox.text.trim()) return;
+
+    try {
+      const response = await fetch('http://localhost:8000/enhance-prompt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: selectedBox.text })
+      });
+
+      const data = await response.json();
+
+      if (data.enhanced_prompt) {
+        setTextBoxes(prev =>
+          prev.map(box =>
+            box.id === selectedBox.id ? { ...box, text: data.enhanced_prompt } : box
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Enhance prompt failed:', error);
+    }
+  };
+
   return (
     <div className="canvas-container">
       {/* Top Toolbar */}
@@ -401,7 +426,7 @@ function App() {
           </button>
         </div>
         <div className="toolbar-right">
-          <button className="mode-button mode-grey">
+          <button className="mode-button mode-grey" onClick={handleEnhancePrompt}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <circle cx="11" cy="11" r="7" stroke="white" strokeWidth="2" />
               <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="white" strokeWidth="2" strokeLinecap="round" />

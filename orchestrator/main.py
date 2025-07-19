@@ -1,17 +1,40 @@
 # orchestrator/main.py
 
+import os
 from fastapi import FastAPI
 from pydantic import BaseModel
+import google.generativeai as genai  # type: ignore
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+load_dotenv()
 
-# 1) Define the FastAPI app object
+# --- Configure Gemini ---
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # put this in your .env or export in shell
+genai.configure(api_key=GEMINI_API_KEY)
+
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# --- FastAPI App ---
 app = FastAPI()
 
-# 2) Define a simple schema for incoming requests
+# --- CORS for frontend (optional but useful in dev) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Request schema ---
 class JobRequest(BaseModel):
     prompt: str = ""
     image_url: str = ""
 
-# 3) Expose your three endpoints
+class EnhancePromptResponse(BaseModel):
+    enhanced_prompt: str
+
+# --- Endpoints ---
 @app.post("/generate-image")
 async def generate_image(req: JobRequest):
     return {"status": "ok", "step": "generate-image", "received_prompt": req.prompt}
@@ -23,3 +46,21 @@ async def convert_mesh(req: JobRequest):
 @app.post("/auto-rig")
 async def auto_rig(req: JobRequest):
     return {"status": "ok", "step": "auto-rig", "received_mesh": req.image_url}
+
+@app.post("/enhance-prompt", response_model=EnhancePromptResponse)
+async def enhance_prompt(req: JobRequest):
+    user_desc = req.prompt.strip()
+
+    system_prompt = (
+        "You are an expert at writing prompts for Stable Diffusion to generate 3D character models. "
+        "Given a user description, rewrite it as an ideal prompt for Stable Diffusion to generate a T-posing character model. "
+        "Preserve the original character description, but add context to ensure the output is: "
+        "T-posing, full body, front-facing, clear, highly detailed, with visible clothing and body type, on a plain background. "
+        "Output only the enhanced prompt, no commentary or quotes."
+    )
+
+    prompt = f"{system_prompt}\n\nUser description:\n{user_desc}\n\nEnhanced prompt:"
+    response = model.generate_content(prompt)
+    enhanced = response.text.strip()
+
+    return {"enhanced_prompt": enhanced}
