@@ -1,18 +1,22 @@
 # orchestrator/main.py
 
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import google.generativeai as genai  # type: ignore
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 load_dotenv()
+import requests
 
 # --- Configure Gemini ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # put this in your .env or export in shell
 genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel("gemini-1.5-flash")
+
+COLAB_API_URL = "https://4896656563fd.ngrok-free.app/generate"
+
 
 # --- FastAPI App ---
 app = FastAPI()
@@ -37,7 +41,18 @@ class EnhancePromptResponse(BaseModel):
 # --- Endpoints ---
 @app.post("/generate-image")
 async def generate_image(req: JobRequest):
-    return {"status": "ok", "step": "generate-image", "received_prompt": req.prompt}
+    if not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt is empty")
+
+    try:
+        response = requests.post(COLAB_API_URL, json={"prompt": req.prompt})
+        if response.status_code != 200:
+            raise HTTPException(status_code=response.status_code, detail=response.text)
+
+        data = response.json()
+        return {"image_base64": data["image_base64"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error contacting Colab API: {str(e)}")
 
 @app.post("/convert-mesh")
 async def convert_mesh(req: JobRequest):

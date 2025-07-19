@@ -407,6 +407,42 @@ function App() {
     }
   };
 
+  // Add handleGenerateImage function
+  const handleGenerateImage = async () => {
+    const selectedBox = textBoxes.find(box => selectedTextBoxes.includes(box.id));
+    if (!selectedBox) {
+      console.log("🚫 No text box selected");
+      return;
+    }
+    if (!selectedBox.text.trim()) {
+      console.log("🚫 Selected text box is empty");
+      return;
+    }
+
+    console.log("📤 Sending request to generate-image with prompt:", selectedBox.text);
+    try {
+      const response = await fetch("http://localhost:8000/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: selectedBox.text })
+      });
+
+      const data = await response.json();
+
+      if (data.image_base64) {
+        setTextBoxes(prev =>
+          prev.map(box =>
+            box.id === selectedBox.id
+              ? { ...box, image: `data:image/png;base64,${data.image_base64}`, text: '' }
+              : box
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Image generation failed:", err);
+    }
+  };
+
   return (
     <div className="canvas-container">
       {/* Top Toolbar */}
@@ -432,6 +468,14 @@ function App() {
               <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
             Enhance Prompt
+          </button>
+          <button className="mode-button mode-3d" onClick={handleGenerateImage}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <polyline points="3.27,6.96 12,12.01 20.73,6.96" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="22.08" x2="12" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Image
           </button>
           <button className="mode-button mode-3d">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -526,7 +570,13 @@ function App() {
                 onDoubleClick={selectedTool === 'select' ? () => handleTextBoxEdit(textBox.id) : undefined}
                 onMouseDown={e => handleBoxMouseDown(e, textBox.id)}
               >
-                {textBox.isEditing ? (
+                {textBox.image ? (
+                  <img 
+                    src={textBox.image} 
+                    alt="Generated" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                ) : textBox.isEditing ? (
                   <textarea
                     ref={el => textareaRefs.current[textBox.id] = el}
                     value={textBox.text}
