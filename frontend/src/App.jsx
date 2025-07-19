@@ -474,21 +474,11 @@ function App() {
           >
             {/* Central Logo Section */}
             <div className="logo-section">
-              <div className="palette-icon">
-                <svg width="80" height="80" viewBox="0 0 100 100" fill="none">
-                  {/* Palette base */}
-                  <ellipse cx="50" cy="50" rx="35" ry="25" fill="#8B4513" stroke="#654321" strokeWidth="2"/>
-                  {/* Paint dabs */}
-                  <circle cx="35" cy="40" r="6" fill="#FF6B6B"/>
-                  <circle cx="45" cy="35" r="6" fill="#4ECDC4"/>
-                  <circle cx="55" cy="40" r="6" fill="#FFE66D"/>
-                  <circle cx="65" cy="45" r="6" fill="#FF8E53"/>
-                  <circle cx="40" cy="50" r="6" fill="#A8E6CF"/>
-                  <circle cx="50" cy="55" r="6" fill="#FFFFFF"/>
-                  {/* Thumb hole */}
-                  <ellipse cx="50" cy="70" rx="8" ry="12" fill="#8B4513" stroke="#654321" strokeWidth="2"/>
-                </svg>
-              </div>
+              <img
+                src="https://via.placeholder.com/80x80?text=Logo"
+                alt="Logo Placeholder"
+                style={{ width: 80, height: 80, borderRadius: 12, background: '#eee', objectFit: 'cover' }}
+              />
               <h1 className="logo-title">Embodi</h1>
               <p className="logo-subtitle">Describe. Upload. Become.</p>
             </div>
