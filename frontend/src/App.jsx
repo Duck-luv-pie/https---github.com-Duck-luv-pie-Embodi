@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './App.css'
+import ThreeJSViewer from './ThreeJSViewer'
 
 function App() {
   const [selectedMode, setSelectedMode] = useState('text') // 'art' or 'text'
@@ -511,6 +512,9 @@ function App() {
       // Get the .obj file content as text
       const objContent = await response.text();
 
+      console.log('✅ Received .obj content, length:', objContent.length);
+      console.log('✅ First 200 chars of .obj:', objContent.substring(0, 200));
+
       // Replace the image with the .obj file content in the text box
       setTextBoxes(prev =>
         prev.map(box =>
@@ -518,14 +522,26 @@ function App() {
             ? { 
                 ...box, 
                 image: null, // Remove the image
-                text: objContent, // Set the .obj content as text
+                objContent: objContent, // Store .obj content for Three.js rendering
+                text: '', // Clear text
                 isEditing: false 
               }
             : box
         )
       );
 
-      console.log("✅ Mesh converted and displayed as text");
+      // Also trigger download of the .obj file
+      const blob = new Blob([objContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `character_${Date.now()}.obj`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log("✅ Mesh converted, 3D viewer displayed, and .obj file downloaded");
 
     } catch (err) {
       console.error("Mesh conversion failed:", err);
@@ -634,11 +650,11 @@ function App() {
             {/* Central Logo Section */}
             <div className="logo-section">
               <img
-                src="https://via.placeholder.com/80x80?text=Logo"
+                src="Embodi.png"
                 alt="Logo Placeholder"
-                style={{ width: 80, height: 80, borderRadius: 12, background: '#eee', objectFit: 'cover' }}
+                style={{ width: 120, height: 120, borderRadius: 12, background: '#eee', objectFit: 'cover' }}
               />
-              <h1 className="logo-title">Embodi</h1>
+              
               <p className="logo-subtitle">Describe. Upload. Become.</p>
             </div>
             {/* Text Boxes */}
@@ -653,8 +669,9 @@ function App() {
                   width: textBox.width,
                   height: textBox.height,
                   border: selectedTextBoxes.includes(textBox.id) ? '2px solid #007AFF' : '1px solid #CCC',
-                  backgroundColor: 'white',
-                  cursor: selectedTool === 'select' ? 'move' : 'text'
+                  backgroundColor: textBox.objContent ? 'transparent' : 'white',
+                  cursor: selectedTool === 'select' ? 'move' : 'text',
+                  overflow: 'hidden'
                 }}
                 onClick={() => handleTextBoxClick(textBox.id)}
                 onDoubleClick={selectedTool === 'select' ? () => handleTextBoxEdit(textBox.id) : undefined}
@@ -665,6 +682,12 @@ function App() {
                     src={textBox.image} 
                     alt="Generated" 
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                ) : textBox.objContent ? (
+                  <ThreeJSViewer 
+                    objContent={textBox.objContent}
+                    width={textBox.width}
+                    height={textBox.height}
                   />
                 ) : textBox.isEditing ? (
                   <textarea

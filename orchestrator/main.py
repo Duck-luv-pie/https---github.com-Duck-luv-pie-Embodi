@@ -16,7 +16,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-COLAB_API_URL = "https://4896656563fd.ngrok-free.app/generate"
+COLAB_API_URL = "https://236e429e5da5.ngrok-free.app/generate"
 COLAB_API_URL_2 = "https://c93a85c63d08.ngrok-free.app/generated"  # Fresh ngrok URL
 
 
@@ -77,11 +77,21 @@ async def convert_mesh(req: JobRequest):
         )
         print(f"Colab response status: {colab_response.status_code}")
         print(f"Colab response text: {colab_response.text[:200]}...")  # First 200 chars
+        print(f"Colab response content length: {len(colab_response.content)} bytes")
+        print(f"Colab response headers: {colab_response.headers}")
         
         if colab_response.status_code != 200:
             print(f"Colab error: {colab_response.text}")
             raise HTTPException(status_code=500, detail=f"Colab error: {colab_response.text}")
 
+        # Check if the response looks like an OBJ file
+        content_text = colab_response.content.decode('utf-8', errors='ignore')
+        print(f"Response content preview: {content_text[:200]}")
+        
+        if not content_text.strip().startswith('#') and not 'v ' in content_text and not 'f ' in content_text:
+            print("WARNING: Response does not look like a valid OBJ file!")
+            print("This might be an error message or different format")
+        
         print(f"Successfully got .obj file, size: {len(colab_response.content)} bytes")
         
         # Return the raw .obj file directly
